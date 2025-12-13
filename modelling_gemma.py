@@ -132,8 +132,30 @@ class PaliGemmaConditionalGeneration(nn.Module):
         #Zero out padding tokens
         final_embedding = torch.where(pad_mask_expanded, torch.zeros_like(final_embedding), final_embedding)
 
-        
+        #### Create the Attention Mask
 
+        dtype, device = inputs_embeds.dtype, inputs_embeds.device
+        min_dtype = torch.finfo(dtype).min
+        q_len = inputs_embeds.shape[1]
+
+
+        if kv_cache is None or kv_cache.num_items() == 0:
+            causal_mask = torch.full(
+                (batch_size, q_len, q_len), fill_value = 0, dtype = dtype, device = device
+            )
+        else:
+            assert q_len == 1
+            kv_len = kv_cache.num_items() + q_len
+            # Also in this case we don;t need to mask anything, since each query should be able to attent to all previous tokens
+            causal_mask = torch.full(
+                (batch_size, q_len, kv_len), fill_value=0, dtype=dtype, device=device
+            )
+
+        # Add the head dimension
+        # [Batch_size, Q_len, KV_len] -> [Batch_Size, Num_Heads_Q, Q_Len, KV_Len]
+        causal_mask = causal_mask.unsqueeze(1)
+
+        
 
     def forward(
         self, 
@@ -166,3 +188,4 @@ class PaliGemmaConditionalGeneration(nn.Module):
         )
 
         return ouputs
+
