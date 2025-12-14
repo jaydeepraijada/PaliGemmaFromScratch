@@ -214,6 +214,10 @@ class SiglipVisionTransformer(nn.Module):
        
 class SiglipVisionModel(nn.Module):
 
+    """
+    The Vision Model for the Siglip Model. Input is the image and output is the image features for each patch.
+    """
+
     def __init__(self, config: SiglipVisionConfig):
         super().__init__()
         self.config = config
